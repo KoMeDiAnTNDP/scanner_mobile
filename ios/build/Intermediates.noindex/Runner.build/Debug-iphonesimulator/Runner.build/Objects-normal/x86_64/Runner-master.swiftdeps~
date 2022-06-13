@@ -1,0 +1,6 @@
+version: "Apple Swift version 5.5.2 (swiftlang-1300.0.47.5 clang-1300.0.29.30)"
+options: "4cf1276d27bac0f00a5efd253af78cd2219d2660c27000a8ae0fb02e98cb72d8"
+build_start_time: [1654949387, 249783039]
+build_end_time: [1654949393, 165354013]
+inputs:
+  "/Users/komediant/Documents/scanner_mobile/ios/Runner/AppDelegate.swift": [1653017493, 0]
