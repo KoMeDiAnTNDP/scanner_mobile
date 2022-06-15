@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flow_builder/flow_builder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:scanner_mobile/src/category/category.dart';
+import 'package:scanner_mobile/src/home/routes/routes.dart';
+import 'package:scanner_mobile/src/shared/widgets/widgets.dart';
 
 class Images extends StatelessWidget {
   const Images({Key? key}) : super(key: key);
@@ -16,43 +19,24 @@ class Images extends StatelessWidget {
           );
         }
 
-        return _createImagesList(state.imageUrls);
+        return _createImagesList(context, state.imageUrls);
       },
     );
   }
 
-  Widget _createImagesList(List<String> imageUrls) {
-    return GridView.builder(
-      itemCount: imageUrls.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10.0,
-        crossAxisSpacing: 20.0,
-      ),
-      itemBuilder: (_, index) => _createImageItem(imageUrls[index]),
+  void _selectImage(BuildContext context, String url) {
+    context.flow<HomeData>().update((HomeData homeData) =>
+        homeData.copyWith(imageUrl: url),
     );
   }
 
-  Widget _createImageItem(String url) {
-    return InkWell(
-      onTap: () => {},
-      child: GridTile(
-        child: Card(
-          child: Image.network(
-            url,
-            loadingBuilder: (context, image, loading) {
-              if (loading == null) return image;
-
-              return const Center(
-                child: SizedBox(
-                  width: 40.0,
-                  height: 40.0,
-                  child: CircularProgressIndicator(),
-                ),
-              );
-            },
-          ),
-        ),
+  Widget _createImagesList(BuildContext context, List<String> imageUrls) {
+    return CustomGridList<String>(
+      data: imageUrls,
+      crossAxisCount: 2,
+      itemBuilder: (index) => ImageGridItem(
+        url: imageUrls[index],
+        onTap: () => _selectImage(context, imageUrls[index]),
       ),
     );
   }

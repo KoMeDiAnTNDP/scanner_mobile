@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:scanner_mobile/src/home/bloc/home_bloc.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
@@ -72,46 +73,106 @@ class HomeView extends StatelessWidget {
     return files;
   }
 
+  void _handleTap(BuildContext context, bool camera, bool advance, ValueNotifier<bool> isDialOpen) {
+    isDialOpen.value = false;
+    HomeBloc homeBloc = context.read<HomeBloc>();
+
+    _getImages(context, camera: camera)
+        .then((files) => homeBloc.add(UploadFiles(files, advance)));
+  }
+
   @override
   Widget build(BuildContext context) {
     ValueNotifier<bool> isDialOpen = ValueNotifier(false);
     HomeBloc homeBloc = context.read<HomeBloc>();
 
-    return Scaffold(
-      appBar: const PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: HomeAppBar(),
-      ),
-      body: GestureDetector(
-        onTap: () => isDialOpen.value = false,
-        child: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Categories(),
+    return LoaderOverlay(
+      useDefaultLoading: false,
+      overlayWidget: const Center(
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-      floatingActionButton: SpeedDial(
-        icon: Icons.add,
-        activeIcon: Icons.close,
-        renderOverlay: false,
-        spacing: 3,
-        spaceBetweenChildren: 4.0,
-        closeManually: true,
-        childPadding: const EdgeInsets.all(5),
-        openCloseDial: isDialOpen,
-        closeDialOnPop: true,
-        children: [
-          SpeedDialChild(
-            child: const Icon(Icons.document_scanner),
-            onTap: () => _getImages(context)
-                .then((files) => homeBloc.add(UploadFiles(files))),
+      child: BlocListener<HomeBloc, HomeState>(
+        listener: (context, state) {
+          if (state.upload) {
+            context.loaderOverlay.show();
+          } else {
+            context.loaderOverlay.hide();
+          }
+        },
+        child: Scaffold(
+          appBar: const PreferredSize(
+            preferredSize: Size.fromHeight(kToolbarHeight),
+            child: HomeAppBar(),
           ),
-          SpeedDialChild(
-            child: const Icon(Icons.camera_alt),
-            onTap: () => _getImages(context, camera: true)
-                .then((files) => homeBloc.add(UploadFiles(files))),
-          )
-        ],
-      ),
+          drawer: Drawer(
+            width: 200,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: Colors.blue,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Settings',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                BlocBuilder<HomeBloc, HomeState>(
+                  buildWhen: (prev, curr) => prev.advance != curr.advance,
+                  builder: (context, state) {
+                    return SwitchListTile(
+                      title: const Text('Advance'),
+                      value: state.advance,
+                      onChanged: (value) => homeBloc.add(AdvanceModeChanged(value)),
+                    );
+                  },
+                )
+              ],
+            ),
+          ),
+          body: GestureDetector(
+            onTap: () => isDialOpen.value = false,
+            child: const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Categories(),
+            ),
+          ),
+          floatingActionButton: BlocBuilder<HomeBloc, HomeState>(
+            builder: (context, state) {
+              return SpeedDial(
+                icon: Icons.add,
+                activeIcon: Icons.close,
+                renderOverlay: false,
+                spacing: 3,
+                spaceBetweenChildren: 4.0,
+                closeManually: true,
+                childPadding: const EdgeInsets.all(5),
+                openCloseDial: isDialOpen,
+                closeDialOnPop: true,
+                children: [
+                  SpeedDialChild(
+                    child: const Icon(Icons.document_scanner),
+                    onTap: () => _handleTap(context, false, state.advance, isDialOpen),
+                  ),
+                  SpeedDialChild(
+                    child: const Icon(Icons.camera_alt),
+                    onTap: () => _handleTap(context, true, state.advance, isDialOpen),
+                  )
+                ],
+              );
+            },
+          ),
+        ),
+      )
     );
   }
 }

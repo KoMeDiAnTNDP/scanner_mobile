@@ -7,18 +7,29 @@ import 'package:scanner_mobile/src/category/view/category_view.dart';
 import 'package:scanner_mobile/src/shared/repository/user/user_repository.dart';
 
 class CategoryPage extends StatelessWidget {
-  const CategoryPage({Key? key, required this.category}) : super(key: key);
+  const CategoryPage({
+    Key? key,
+    required this.mainCategory,
+    this.subCategory,
+  }) : super(key: key);
 
-  final Category category;
+  final Category mainCategory;
+  final Category? subCategory;
 
-  static Page page(Category category) =>
-      MaterialPage(child: CategoryPage(category: category));
+  static Page page({
+    required Category mainCategory,
+    Category? subCategory,
+  }) => MaterialPage(child: CategoryPage(
+    mainCategory: mainCategory,
+    subCategory: subCategory,
+  ));
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CategoryBloc>(
       create: (_) => CategoryBloc(
-        category: category,
+        mainCategory: mainCategory,
+        subCategory: subCategory,
         userRepository: UserRepository(),
       ),
       child: const CategoryView(),

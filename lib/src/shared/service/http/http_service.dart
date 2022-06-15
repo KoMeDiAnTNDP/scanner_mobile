@@ -58,6 +58,7 @@ class HttpService {
         Map<String, dynamic>? params,
         bool isMultipart = false,
         List<models.File>? files,
+        bool advance = false
       }) async {
     Response response;
 
@@ -70,7 +71,8 @@ class HttpService {
             path,
             body: body,
             multipart: isMultipart,
-            files: files
+            files: files,
+            advance: advance,
         );
     }
 
@@ -108,13 +110,19 @@ class HttpService {
     return response;
   }
 
-  Future<Response> _sendMultipartData(String path, List<models.File> files) async {
+  Future<Response> _sendMultipartData(String path, List<models.File> files, bool advance) async {
     List<MultipartFile> multipartFiles = files
         .map((models.File file) => MultipartFile.fromFileSync(file.path, filename: file.name))
         .toList();
-    FormData data = FormData.fromMap({
+    Map<String, dynamic> mapData = {
       'files': multipartFiles
-    });
+    };
+
+    if (advance) {
+      mapData['advance'] = advance.toString();
+    }
+
+    FormData data = FormData.fromMap(mapData);
     
     return await _dio.post(path, data: data);
   }
@@ -125,9 +133,10 @@ class HttpService {
         Map<String, dynamic>? body,
         bool multipart = false,
         List<models.File>? files,
+        bool advance = false,
       }) async {
     if (multipart && files != null) {
-      return await _sendMultipartData(path, files);
+      return await _sendMultipartData(path, files, advance);
     }
 
     return await _dio.post(path, data: body);

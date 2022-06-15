@@ -14,8 +14,9 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         _userRepository = userRepository,
         super(const HomeState()) {
     on<GetUser>(_onGetUser);
-    on<GetUserCategories>(_onGetUserCategories);
+    on<GetUserMainCategories>(_onGetUserMainCategories);
     on<UploadFiles>(_onUploadFiles);
+    on<AdvanceModeChanged>(_onAdvanceModeChanged);
 
     add(GetUser());
   }
@@ -37,13 +38,16 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         userIsLoading: false,
       ));
 
-      add(GetUserCategories());
+      add(GetUserMainCategories());
     } catch (_) {
       emit(state.copyWith(userIsLoading: false));
     }
   }
 
-  void _onGetUserCategories(GetUserCategories event, Emitter<HomeState> emit) async {
+  void _onGetUserMainCategories(
+      GetUserMainCategories event,
+      Emitter<HomeState> emit,
+      ) async {
     emit(state.copyWith(categoriesIsLoading: true));
 
     try {
@@ -66,11 +70,15 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(upload: true));
 
     try {
-      await _userRepository.uploadFiles(event.files);
+      await _userRepository.uploadFiles(event.files, advance: event.advance);
       emit(state.copyWith(upload: false));
-      add(GetUserCategories());
+      add(GetUserMainCategories());
     } catch (_) {
       emit(state.copyWith(upload: false));
     }
+  }
+
+  void _onAdvanceModeChanged(AdvanceModeChanged event, Emitter<HomeState> emit) {
+    emit(state.copyWith(advance: event.advance));
   }
 }

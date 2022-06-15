@@ -1,5 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:scanner_mobile/src/category/category.dart';
 
 import 'package:scanner_mobile/src/shared/models/models.dart';
 import 'package:scanner_mobile/src/shared/models/http/models.dart';
@@ -10,40 +11,80 @@ part 'category_state.dart';
 
 class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
   CategoryBloc({
-    required Category category,
+    required Category mainCategory,
     required UserRepository userRepository,
-  }): _category = category,
+    Category? subCategory,
+  }): _mainCategory = mainCategory,
+        _subCategory = subCategory,
         _userRepository = userRepository,
         super(const CategoryState()) {
-    on<UploadImages>(_onUploadImages);
+    on<GetSubCategory>(_onGetSubCategories);
+    on<GetImages>(_onGetImages);
 
-    add(UploadImages());
+    if (subCategory == null) {
+      add(GetSubCategory(mainCategory.id));
+    } else {
+      add(GetImages(
+        mainCategoryId: mainCategory.id,
+        subCategoryId: subCategory.id,
+      ));
+    }
   }
 
-  final Category _category;
+  final Category _mainCategory;
+  final Category? _subCategory;
   final UserRepository _userRepository;
 
-  Category get category => _category;
+  Category get mainCategory => _mainCategory;
 
-  void _onUploadImages(UploadImages event, Emitter<CategoryState> emit) async {
-    emit(state.copyWith(loading: true));
+  Category? get subCategory => _subCategory;
+
+  void _onGetSubCategories(GetSubCategory event, Emitter<CategoryState> emit) async {
+    emit(state.copyWith(subCategoriesLoading: true));
+
+    try {
+      BaseResponse<CategoriesResponse> response = await _userRepository.getCategories(
+        mainCategoryId: event.mainCategoryId,
+      );
+
+      if (response.error != null || response.data == null) {
+        emit(state.copyWith(subCategoriesLoading: false));
+
+        return;
+      }
+
+      emit(state.copyWith(
+        subCategories: response.data!.categories,
+        subCategoriesLoading: false,
+      ));
+      add(GetImages(mainCategoryId: event.mainCategoryId));
+    } catch (_) {
+      emit(state.copyWith(subCategoriesLoading: false));
+    }
+  }
+
+  void _onGetImages(GetImages event, Emitter<CategoryState> emit) async {
+    emit(state.copyWith(imagesLoading: true));
 
     try {
       BaseResponse<ImagesResponse> response =
-        await _userRepository.getImagesByCategory(_category.id);
+        await _userRepository.getImagesByCategory(
+          mainCategoryId: event.mainCategoryId,
+          subCategoryId: event.subCategoryId,
+        );
 
       if (response.error != null || response.data == null) {
-        emit(state.copyWith(loading: false));
+        emit(state.copyWith(imagesLoading: false));
 
         return;
       }
 
       emit(state.copyWith(
         imageUrls: response.data!.imageUrls,
-        loading: false,
+        imagesLoading: false,
       ));
     } catch (_) {
-      emit(state.copyWith(loading: false));
+      emit(state.copyWith(imagesLoading: false));
     }
   }
 }

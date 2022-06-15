@@ -9,15 +9,16 @@ abstract class HomeEvent extends Equatable {
 
 class GetUser extends HomeEvent {}
 
-class GetUserCategories extends HomeEvent {}
+class GetUserMainCategories extends HomeEvent {}
 
 class UploadFiles extends HomeEvent {
-  const UploadFiles(this.files);
+  const UploadFiles(this.files, this.advance);
 
   final List<File> files;
+  final bool advance;
 
   @override
-  List<Object> get props => [files];
+  List<Object> get props => [files, advance];
 }
 
 class SelectCategory extends HomeEvent {
@@ -27,4 +28,13 @@ class SelectCategory extends HomeEvent {
 
   @override
   List<Object> get props => [id];
+}
+
+class AdvanceModeChanged extends HomeEvent {
+  const AdvanceModeChanged(this.advance);
+
+  final bool advance;
+
+  @override
+  List<Object> get props => [advance];
 }

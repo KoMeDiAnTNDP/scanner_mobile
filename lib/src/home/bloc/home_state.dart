@@ -7,15 +7,15 @@ class HomeState extends Equatable {
     this.userIsLoading = false,
     this.categoriesIsLoading = false,
     this.upload = false,
-    this.categoryId = -1,
+    this.advance = false,
   });
 
   final User user;
   final List<Category> categories;
-  final int categoryId;
   final bool userIsLoading;
   final bool categoriesIsLoading;
   final bool upload;
+  final bool advance;
 
   HomeState copyWith({
     User? user,
@@ -24,14 +24,15 @@ class HomeState extends Equatable {
     bool? userIsLoading,
     bool? categoriesIsLoading,
     bool? upload,
+    bool? advance
   }) {
     return HomeState(
       user: user ?? this.user,
       categories: categories ?? this.categories,
-      categoryId: categoryId ?? this.categoryId,
       userIsLoading: userIsLoading ?? this.userIsLoading,
       categoriesIsLoading: categoriesIsLoading ?? this.categoriesIsLoading,
       upload: upload ?? this.upload,
+      advance: advance ?? this.advance,
     );
   }
 
@@ -39,7 +40,7 @@ class HomeState extends Equatable {
   List<Object> get props => [
     user,
     categories,
-    categoryId,
+    advance,
     userIsLoading,
     categoriesIsLoading,
     upload,

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:scanner_mobile/src/home/home.dart';
 import 'package:scanner_mobile/src/home/routes/routes.dart';
 import 'package:scanner_mobile/src/shared/models/models.dart';
+import 'package:scanner_mobile/src/shared/widgets/widgets.dart';
 
 class Categories extends StatelessWidget {
   const Categories({Key? key}) : super(key: key);
@@ -20,44 +21,38 @@ class Categories extends StatelessWidget {
         }
         
         FlowController<HomeData> homeFlowController = context.flow<HomeData>();
+        HomeBloc homeBloc = context.read<HomeBloc>();
 
-        return _createList(state.categories, homeFlowController);
+        return RefreshIndicator(
+          onRefresh: () async => homeBloc.add(GetUserMainCategories()),
+          child: _createList(context, homeFlowController, state.categories),
+        );
       },
     );
   }
 
-  Widget _createCategoryItem(
-      Category category,
+  void _selectCategory(
+      BuildContext context,
       FlowController<HomeData> homeFlowController,
+      Category category
       ) {
-    return InkWell(
-      onTap: () =>
-          homeFlowController.update((HomeData homeData) =>
-              homeData.copyWith(category: category),
-          ),
-      child: GridTile(
-        child: Card(
-          child: Center(
-            child: Text(category.name),
-          ),
-        ),
-      ),
+    homeFlowController.update((HomeData homeData) =>
+        homeData.copyWith(mainCategory: category),
     );
   }
 
   Widget _createList(
-      List<Category> categories,
+      BuildContext context,
       FlowController<HomeData> homeFlowController,
+      List<Category> categories,
       ) {
-    return GridView.builder(
-      itemCount: categories.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 10.0,
-        crossAxisSpacing: 20.0,
-      ),
-      itemBuilder: (_, index) =>
-          _createCategoryItem(categories[index], homeFlowController),
+    return CustomGridList<Category>(
+      data: categories,
+      itemBuilder: (index) =>
+          CategoryGridItem(
+            onTap: () => _selectCategory(context, homeFlowController, categories[index]),
+            categoryName: categories[index].name,
+          ),
     );
   }
 }
